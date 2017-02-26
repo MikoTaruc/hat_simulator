@@ -17,6 +17,7 @@ var cursors;
 var hatYell;
 var compliment;
 var wilhelm;
+var pickup;
 
 // Scoreboard
 var rabiesCounter = 0;
@@ -45,7 +46,8 @@ function preload() {
 
   game.load.audio('hats_yell', 'assets/audio/hats_yell.m4a');
   game.load.audio('nice_hat', 'assets/audio/nice_hat.m4a');
-  game.load.audio('wilhelm', 'assets/audio/wilhelm.mp3');
+  game.load.audio('wilhelm', 'assets/audio/wilhelm.wav');
+  game.load.audio('pickup', 'assets/audio/pickup.wav');
 }
 
 function create() {
@@ -55,10 +57,11 @@ function create() {
   hatYell = game.add.audio('hats_yell');
   compliment = game.add.audio('nice_hat');
   wilhelm = game.add.audio('wilhelm');
+  pickup = game.add.audio('pickup');
 
   // setup Score
-  rabiesText = game.add.text(16, 16, 'You have 0 rabies', { fontSize: '28px' });
-  hatsText = game.add.text(44, 44, 'but it\'s k because it\'s raining hats...', { fontSize: '16px' });
+  rabiesText = game.add.text(16, 16, 'U haf 0 rabies', { fontSize: '28px' });
+  hatsText = game.add.text(44, 44, 'but it\'s k becus it\'s rening hets...', { fontSize: '16px' });
   highscoreText = game.add.text( 900, 44, 'Highscore: 0', {fontSize: '16px'});
 
   // setup Free Hats Group
@@ -214,7 +217,9 @@ function pickupHat(player, hat) {
   wornHats.push(cloned);
   hat.kill();
 
-  hatsText.text = 'but its k because you have ' + wornHats.length + ' hats...';
+  pickup.play();
+
+  hatsText.text = 'but its k becus you haf ' + wornHats.length + ' hets...';
   if (wornHats.length > highscore) {
     highscore = wornHats.length;
     highscoreText.text = 'Highscore: ' + highscore;
@@ -276,8 +281,8 @@ function eatPlayer(squirrel, player) {
   wilhelm.play();
 
   rabiesCounter++;
-  rabiesText.text = 'You have ' + rabiesCounter  + ' rabies';
-  hatsText.text = '... yeah... that blows.'
+  rabiesText.text = 'U haf ' + rabiesCounter  + ' rabies';
+  hatsText.text = '... yeah... that blose.'
   resetSquirrels();
   resetPlayer();
 }
