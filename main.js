@@ -110,6 +110,9 @@ function setupHats() {
 
     // Caps don't fit on player head if you dont set the anchor to this.
     switch (rand) {
+      case 0:
+        hat.anchor.setTo(0.5, 0.65);
+        break;
       case 2, 3:
         hat.anchor.setTo(0.6, 0.5);
         break;
@@ -124,6 +127,7 @@ function setupHats() {
 }
 
 function setupPlayer() {
+  hatYell.play();
   player = game.add.sprite(game.world.width/2, game.world.height, 'player');
   player.anchor.setTo(0.5, 0.5);
   player.animations.add('left', [8, 9, 10, 11], 10, true);
@@ -203,7 +207,7 @@ function setupHatLanding() {
 }
 
 function pickupHat(player, hat) {
-  var cloned = game.add.sprite(player.x, player.y - 15 - (wornHats.length * 6), hat.key, hat.frame);
+  var cloned = game.add.sprite(player.x, player.y - 17 - (wornHats.length * 6), hat.key, hat.frame);
   cloned.anchor.setTo(hat.anchor.x, hat.anchor.y);
 
   allHats.remove(hat, true);
@@ -211,8 +215,6 @@ function pickupHat(player, hat) {
   hat.kill();
 
   hatsText.text = 'but its k because you have ' + wornHats.length + ' hats...';
-  console.log(wornHats.length)
-  console.log(highscore);
   if (wornHats.length > highscore) {
     highscore = wornHats.length;
     highscoreText.text = 'Highscore: ' + highscore;
@@ -222,7 +224,7 @@ function pickupHat(player, hat) {
 function keepHatOnHead() {
   for (var i = 0; i < wornHats.length; i++) {
     wornHats[i].x = player.x;
-    wornHats[i].y = player.y - 15 - (i * 6);
+    wornHats[i].y = player.y - 17 - (i * 6);
   }
 }
 
