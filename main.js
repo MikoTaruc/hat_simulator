@@ -177,7 +177,7 @@ function listenControls() {
     player.frame = 0;
   }
 
-  var pauseButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+  var pauseButton = game.input.keyboard.addKey(Phaser.Keyboard.P);
   pauseButton.onDown.add(pauseGame, this);
 
   if (player.position.y <= 467) {
