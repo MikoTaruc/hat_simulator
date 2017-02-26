@@ -177,9 +177,16 @@ function listenControls() {
     player.frame = 0;
   }
 
+  var pauseButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+  pauseButton.onDown.add(pauseGame, this);
+
   if (player.position.y <= 467) {
     player.body.velocity.y = 0;
   }
+}
+
+function pauseGame() {
+  game.paused = !game.paused;
 }
 
 function setupHatLanding() {
@@ -280,7 +287,7 @@ function update() {
   player.body.velocity.y = 0;
 
   // Check if we want to rain hats
-  if (game.time.now - lastHatRain > 1000 && allHats.children.length < 300) {
+  if (game.time.now - lastHatRain > 1000) {
     lastHatRain = game.time.now;
     setupHats();
   }
