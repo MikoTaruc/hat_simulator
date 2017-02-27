@@ -2,6 +2,9 @@ var game = new Phaser.Game(1067, 600, Phaser.AUTO, '', { preload: preload, creat
 
 var player;
 var squirrels;
+var waifuRight;
+var waifuLeft;
+var sushi;
 
 var leftWall;
 var rightWall;
@@ -10,6 +13,8 @@ var hatStrings = ['cat_hat', 'dog_hat', 'heart_cap', 'normal_cap', 'cat_beanie',
 var allHats;
 var wornHats = new Array();
 var lastHatRain;
+var lastSushiRain;
+var sushiRain;
 
 var cursors;
 
@@ -18,6 +23,7 @@ var hatYell;
 var compliment;
 var wilhelm;
 var pickup;
+var caramel;
 
 // Scoreboard
 var rabiesCounter = 0;
@@ -28,6 +34,8 @@ var highscoreText;
 
 var hatsText = 0;
 
+var gameOver = false;
+
 function preload() {
   // This function gets executed at the beginning
   // This is where you load images and sounds
@@ -36,6 +44,7 @@ function preload() {
   game.load.spritesheet('player', 'assets/player.png', 37, 42);
   game.load.spritesheet('squirrel', 'assets/squirrel/squirrel.png', 30, 24);
   game.load.spritesheet('poof', 'assets/poof.png', 64, 64);
+  game.load.spritesheet('waifu', 'assets/waifu_walk.png', 16, 38);
 
   game.load.image('cat_hat', 'assets/hats/cat_hat.png');
   game.load.image('dog_hat', 'assets/hats/dog_hat.png');
@@ -43,11 +52,13 @@ function preload() {
   game.load.image('cat_beanie', 'assets/hats/cat_beanie.png');
   game.load.image('normal_cap', 'assets/hats/normal_cap.png');
   game.load.image('paper_hat', 'assets/hats/paper_hat.png');
+  game.load.image('sushi', 'assets/sushi.png');
 
   game.load.audio('hats_yell', 'assets/audio/hats_yell.m4a');
   game.load.audio('nice_hat', 'assets/audio/nice_hat.m4a');
-  game.load.audio('wilhelm', 'assets/audio/wilhelm.wav');
+  game.load.audio('wilhelm', 'assets/audio/poof.wav');
   game.load.audio('pickup', 'assets/audio/pickup.wav');
+  game.load.audio('caramel', 'assets/audio/caramel.mp3');
 }
 
 function create() {
@@ -58,6 +69,7 @@ function create() {
   compliment = game.add.audio('nice_hat');
   wilhelm = game.add.audio('wilhelm');
   pickup = game.add.audio('pickup');
+  caramel = game.add.audio('caramel');
 
   // setup Score
   rabiesText = game.add.text(16, 16, 'U haf 0 rabies', { fontSize: '28px' });
@@ -73,16 +85,36 @@ function create() {
   squirrels.enableBody = true;
   squirrels.physicsBodyType = Phaser.Physics.ARCADE;
 
+  sushiRain = game.add.group();
+  sushiRain.enableBody = true;
+  sushiRain.physicsBodyType = Phaser.Physics.ARCADE;
+
   game.physics.startSystem(Phaser.Physics.ARCADE);
 
   setupPlayer();
   setupSquirrels();
   setupSideWalls();
   setupHats();
+  setupWaifu();
   lastHatRain = game.time.now;
+  lastSushiRain = game.time.now;
 
   //  Our controls.
   cursors = game.input.keyboard.createCursorKeys();
+}
+
+function setupWaifu() {
+  waifuRight = game.add.sprite(player.x, player.y - 17, 'waifu');
+  waifuRight.anchor.setTo(0.5, 0.5);
+  waifuRight.animations.add('march', [0, 1, 2, 3, 4], 4, true);
+  waifuRight.animations.play('march');
+  waifuRight.visible = false;
+
+  waifuLeft = game.add.sprite(player.x, player.y - 17, 'waifu');
+  waifuLeft.anchor.setTo(0.5, 0.5);
+  waifuLeft.animations.add('march', [0, 1, 2, 3, 4], 4, true);
+  waifuLeft.animations.play('march');
+  waifuLeft.visible = false;
 }
 
 function setupSideWalls() {
@@ -122,10 +154,19 @@ function setupHats() {
       default:
         break;
     }
-    // hat.body.collideWorldBounds = true;
     hat.body.gravity.x = game.rnd.integerInRange(-100, 100);
     hat.body.gravity.y = 50 + Math.random() * 100;
     hat.body.bounce.x = 1.0;
+  }
+}
+
+function setupSushi() {
+  for (var i = 0; i < 8; i++) {
+    var sushi = sushiRain.create(game.rnd.integerInRange(0, game.world.width), -30, 'sushi');
+    sushi.anchor.setTo(0.5, 0.5);
+    sushi.body.gravity.y = 50 + Math.random() * 100;
+    sushi.body.bounce.x = 1.0;
+    game.add.tween(sushi).to( {angle: 360}, 1000 ).start();
   }
 }
 
@@ -165,24 +206,32 @@ function setupSquirrels() {
 }
 
 function listenControls() {
-  if (cursors.left.isDown) {
-    player.body.velocity.x = -210;
-    player.animations.play('left');
-  } else if (cursors.right.isDown) {
-    player.body.velocity.x = 210;
-    player.animations.play('right');
-  } else if (cursors.up.isDown) {
-    if (player.position.y >= 475) {
-      player.body.velocity.y = -210;
+  if (!gameOver) {
+    if (cursors.left.isDown) {
+      player.body.velocity.x = -210;
+      player.animations.play('left');
+    } else if (cursors.right.isDown) {
+      player.body.velocity.x = 210;
+      player.animations.play('right');
+    } else if (cursors.up.isDown) {
+      if (player.position.y >= 475) {
+        player.body.velocity.y = -210;
+      }
+      player.animations.play('up');
+    } else if (cursors.down.isDown) {
+      player.body.velocity.y = 210;
+      player.animations.play('down');
+    } else {
+      player.animations.stop();
+      player.frame = 0;
     }
-    player.animations.play('up');
-  } else if (cursors.down.isDown) {
-    player.body.velocity.y = 210;
-    player.animations.play('down');
-  } else {
-    player.animations.stop();
-    player.frame = 0;
   }
+
+  waifuRight.x = player.x + 20;
+  waifuRight.y = player.y;
+
+  waifuLeft.x = player.x - 20;
+  waifuLeft.y = player.y;
 
   var pauseButton = game.input.keyboard.addKey(Phaser.Keyboard.P);
   pauseButton.onDown.add(pauseGame, this);
@@ -210,7 +259,7 @@ function setupHatLanding() {
 }
 
 function pickupHat(player, hat) {
-  var cloned = game.add.sprite(player.x, player.y - 17 - (wornHats.length * 6), hat.key, hat.frame);
+  var cloned = game.add.sprite(player.x, player.y - 15 - (wornHats.length * 6), hat.key, hat.frame);
   cloned.anchor.setTo(hat.anchor.x, hat.anchor.y);
 
   allHats.remove(hat, true);
@@ -224,6 +273,30 @@ function pickupHat(player, hat) {
     highscore = wornHats.length;
     highscoreText.text = 'Highscore: ' + highscore;
   }
+
+  if (highscore === 100) {
+    playGameOver();
+  }
+}
+
+function playGameOver() {
+  gameOver = true;
+  waifuLeft.visible = true;
+  waifuRight.visible = true;
+  caramel.play();
+
+  allHats.removeAll();
+  squirrels.removeAll();
+
+  player.animations.play('down');
+  player.x = game.world.width/2;
+  player.y = 475;
+  waifuRight.x = player.x + 25;
+  waifuRight.y = player.y;
+  waifuLeft.x = player.x - 20;
+  waifuLeft.y = player.y;
+
+
 }
 
 function keepHatOnHead() {
@@ -282,9 +355,15 @@ function eatPlayer(squirrel, player) {
 
   rabiesCounter++;
   rabiesText.text = 'U haf ' + rabiesCounter  + ' rabies';
-  hatsText.text = '... yeah... that blose.'
+  hatsText.text = '... yeah... that blowz.'
   resetSquirrels();
   resetPlayer();
+}
+
+function spinSushi() {
+  sushiRain.forEach(function(item, index){
+    item.angle += 10;
+  });
 }
 
 function update() {
@@ -294,9 +373,18 @@ function update() {
   player.body.velocity.y = 0;
 
   // Check if we want to rain hats
-  if (game.time.now - lastHatRain > 1000) {
+  if (game.time.now - lastHatRain > 1000 && !gameOver) {
     lastHatRain = game.time.now;
     setupHats();
+  }
+
+  if (game.time.now - lastSushiRain > 1000 && gameOver) {
+    lastSushiRain = game.time.now;
+    setupSushi();
+  }
+
+  if (gameOver) {
+    spinSushi();
   }
 
   // Setup hat landing
